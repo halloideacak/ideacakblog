@@ -1,0 +1,36 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+.venv
+
+# --- Database (Crucial!) ---
+# Jangan push database lokal ke repo
+*.db
+*.sqlite3
+
+# --- Backup harian ---
+# File dump backup DB lokal, jangan pernah masuk repo
+/backups/
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Testing ---
+.pytest_cache/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Flask/Environment ---
+instance/
+.flaskenv
+
+*.pyc

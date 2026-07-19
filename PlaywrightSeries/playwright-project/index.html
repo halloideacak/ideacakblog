@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Toko Buku Kecil - Belajar Playwright</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Toko Buku Kecil</h1>
+  <nav>
+    <span>Welcome, John</span>
+    <button id="signin-btn">Sign in</button>
+    <a href="/admin.html">Admin</a>
+  </nav>
+</header>
+<div id="login-form">Form masuk (demo, belum terhubung ke apa pun).</div>
+
+<section>
+  <h2>Cari Buku</h2>
+  <label for="search-buku">Cari buku</label>
+  <input id="search-buku" type="text">
+  <p><span id="search-count"></span></p>
+  <ul id="saran-buku"></ul>
+</section>
+
+<section>
+  <h2>Buku Pilihan</h2>
+  <span id="info-tag">Info</span><span class="tooltip-text">Stok terbatas, buruan checkout.</span>
+  <ul id="daftar-buku">
+    <li>Belajar Python untuk Pemula <button class="add-cart">Add to cart</button></li>
+    <li>Java dari Nol <button class="add-cart">Add to cart</button></li>
+    <li>Automasi dengan Playwright <button class="add-cart">Add to cart</button></li>
+  </ul>
+  <p id="cart-message">Item added to cart</p>
+</section>
+
+<section>
+  <h2>Formulir Checkout</h2>
+  <form id="checkout-form">
+    <label for="nama">Nama Lengkap</label>
+    <input id="nama" type="text">
+
+    <label for="tanggal-lahir">Tanggal Lahir</label>
+    <input id="tanggal-lahir" type="date">
+
+    <label for="setuju">I agree to the terms above</label>
+    <input id="setuju" type="checkbox">
+
+    <p>Ukuran:</p>
+    <div class="ukuran-group">
+      <label for="ukuran-s"><input id="ukuran-s" type="radio" name="ukuran"> S</label>
+      <label for="ukuran-m"><input id="ukuran-m" type="radio" name="ukuran"> M</label>
+      <label for="ukuran-l"><input id="ukuran-l" type="radio" name="ukuran"> L</label>
+      <label for="ukuran-xl"><input id="ukuran-xl" type="radio" name="ukuran"> XL</label>
+    </div>
+
+    <label for="warna">Choose a color</label>
+    <select id="warna">
+      <option value="red">Red</option>
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+    </select>
+
+    <label for="warna-multi">Choose multiple colors</label>
+    <select id="warna-multi" multiple>
+      <option value="red">Red</option>
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+    </select>
+
+    <label for="upload-satu">Upload bukti pembayaran</label>
+    <input id="upload-satu" type="file">
+
+    <label for="upload-banyak">Upload lampiran tambahan</label>
+    <input id="upload-banyak" type="file" multiple>
+
+    <label for="area">Catatan</label>
+    <textarea id="area"></textarea>
+
+    <p><button id="submit-btn" type="submit">Submit</button></p>
+    <p id="hasil-simpan">Checkout berhasil disimpan (demo).</p>
+  </form>
+</section>
+
+<script>
+  const BUKU = [
+    "Belajar Python untuk Pemula",
+    "Java dari Nol",
+    "Automasi dengan Playwright"
+  ];
+
+  document.getElementById("signin-btn").addEventListener("click", () => {
+    const el = document.getElementById("login-form");
+    el.style.display = el.style.display === "block" ? "none" : "block";
+  });
+
+  document.querySelectorAll(".add-cart").forEach(btn => {
+    btn.addEventListener("click", () => {
+      setTimeout(() => {
+        document.getElementById("cart-message").style.display = "block";
+      }, 800);
+    });
+  });
+
+  const searchInput = document.getElementById("search-buku");
+  const saran = document.getElementById("saran-buku");
+  const count = document.getElementById("search-count");
+
+  searchInput.addEventListener("keyup", () => {
+    const q = searchInput.value.toLowerCase();
+    const hasil = q === "" ? [] : BUKU.filter(b => b.toLowerCase().includes(q));
+    saran.innerHTML = hasil.map(b => `<li>${b}</li>`).join("");
+    count.textContent = q === "" ? "" : `${hasil.length} buku ditemukan`;
+  });
+
+  document.getElementById("checkout-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    document.getElementById("hasil-simpan").style.display = "block";
+  });
+</script>
+
+</body>
+</html>
