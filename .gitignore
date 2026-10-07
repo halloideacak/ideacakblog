@@ -34,3 +34,6 @@ instance/
 .flaskenv
 
 *.pyc
+
+# --- Java ---
+*.class
