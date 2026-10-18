@@ -1,0 +1,6 @@
+# nama;harga;stok
+Nasi putih;5000;50
+Tempe orek;4000;20
+Es teh;3000;40
+Telur balado;6000;3
+Sayur asem;4000;0
