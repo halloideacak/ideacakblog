@@ -1,10 +1,19 @@
-// satu kali pembeli menyebut pesanan: menu nomor sekian, sekian porsi
+// satu kali pembeli menyebut pesanan: menu apa, sekian porsi
+// sekarang menyimpan object Menu langsung, bukan nomor index-nya
 class ItemPesanan {
-    int indexMenu;
-    int porsi;
+    private final Menu menu;
+    private final int porsi;
 
-    ItemPesanan(int indexMenu, int porsi) {
-        this.indexMenu = indexMenu;
+    ItemPesanan(Menu menu, int porsi) {
+        this.menu = menu;
         this.porsi = porsi;
+    }
+
+    Menu getMenu() {
+        return menu;
+    }
+
+    int getPorsi() {
+        return porsi;
     }
 }

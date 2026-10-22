@@ -1,23 +1,30 @@
 import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Scanner;
 
 class Kasir {
-    String namaWarteg;
-    Menu[] daftarMenu;
-    Scanner input;
-    int[] porsiHarian;
-    int omzet;
-    int jumlahPembeli;
-    Queue<String> antrian = new ArrayDeque<>();   // FIFO: yang datang duluan, dilayani duluan
+    private final String namaWarteg;
+    private final List<Menu> daftarMenu;            // bisa bertambah saat kasir buka
+    private final AturanDiskon aturanDiskon;
+    private final Scanner input;
+    private final Map<String, Integer> porsiHarian = new LinkedHashMap<>();   // nama menu -> porsi terjual, urut sesuai menu
+    private int omzet;
+    private int jumlahPembeli;
+    private final Queue<String> antrian = new ArrayDeque<>();   // FIFO: yang datang duluan, dilayani duluan
 
-    Kasir(String namaWarteg, Menu[] daftarMenu, Scanner input) {
+    Kasir(String namaWarteg, List<Menu> daftarMenu, AturanDiskon aturanDiskon, Scanner input) {
         this.namaWarteg = namaWarteg;
         this.daftarMenu = daftarMenu;
+        this.aturanDiskon = aturanDiskon;
         this.input = input;
-        this.porsiHarian = new int[daftarMenu.length];
+        for (Menu menu : daftarMenu) {
+            porsiHarian.put(menu.getNama(), 0);
+        }
     }
 
     void buka() {
@@ -33,6 +40,7 @@ class Kasir {
                 System.out.println("2. Layani antrian berikutnya");
                 System.out.println("3. Lihat antrian");
                 System.out.println("4. Lihat daftar menu");
+                System.out.println("5. Tambah menu");
                 System.out.println("0. Tutup kasir");
                 System.out.print("Pilih: ");
                 pilihan = bacaAngka();
@@ -42,6 +50,7 @@ class Kasir {
                     case 2 -> layaniAntrianBerikutnya();
                     case 3 -> tampilkanAntrian();
                     case 4 -> tampilkanMenu();
+                    case 5 -> tambahMenu();
                     case 0 -> {
                         if (!antrian.isEmpty()) {
                             System.out.println("Masih ada " + antrian.size() + " pembeli mengantre. Layani dulu.");
@@ -96,14 +105,14 @@ class Kasir {
         System.out.println("Melayani " + namaPembeli + ".");
 
         tampilkanMenu();
-        int[] porsi = ambilPesanan();
+        Map<Menu, Integer> porsi = ambilPesanan();
 
         int subtotal = hitungSubtotal(porsi);
         if (subtotal == 0) {
             System.out.println("Tidak ada pesanan untuk " + namaPembeli + ".");
             return;
         }
-        int diskon = hitungDiskon(subtotal);
+        int diskon = aturanDiskon.hitung(subtotal);
         int total = subtotal - diskon;
 
         cetakStruk(namaPembeli, porsi, subtotal, diskon, total);
@@ -111,23 +120,43 @@ class Kasir {
         catatKeRekap(porsi, total);
     }
 
-    // ---------- pesanan (Stack) ----------
+    // ---------- menu (List) ----------
 
-    int[] ambilPesanan() {
-        Deque<ItemPesanan> pesanan = new ArrayDeque<>();   // LIFO: yang terakhir masuk, dibatalkan duluan
+    void tambahMenu() {
+        System.out.print("Nama menu baru: ");
+        String nama = input.nextLine().trim();
+        if (nama.isEmpty() || porsiHarian.containsKey(nama)) {
+            System.out.println("Nama menu kosong atau sudah ada.");
+            return;
+        }
+        System.out.print("Harga: ");
+        int harga = bacaAngka();
+        if (harga <= 0) {
+            System.out.println("Harga harus lebih dari 0.");
+            return;
+        }
+        daftarMenu.add(new Menu(nama, harga));    // List bertambah panjang, array tidak bisa
+        porsiHarian.put(nama, 0);
+        System.out.println(nama + " ditambahkan sebagai menu nomor " + daftarMenu.size() + ".");
+    }
+
+    // ---------- pesanan (List) ----------
+
+    Map<Menu, Integer> ambilPesanan() {
+        List<ItemPesanan> pesanan = new ArrayList<>();   // bisa dibatalkan dari mana saja, bukan cuma yang terakhir
         int pilihan;
         do {
-            System.out.print("Nomor menu (0 = selesai, -1 = batalkan terakhir): ");
+            System.out.print("Nomor menu (0 = selesai, -1 = batalkan pesanan): ");
             pilihan = bacaAngka();
             if (pilihan == 0) {
                 continue;
             }
             if (pilihan == -1) {
-                batalkanTerakhir(pesanan);
+                batalkanPesanan(pesanan);
                 continue;
             }
             int index = pilihan - 1;
-            if (index < 0 || index >= daftarMenu.length) {
+            if (index < 0 || index >= daftarMenu.size()) {
                 System.out.println("Menu nomor " + pilihan + " tidak ada.");
                 continue;
             }
@@ -137,25 +166,35 @@ class Kasir {
                 System.out.println("Jumlah porsi minimal 1.");
                 continue;
             }
-            pesanan.push(new ItemPesanan(index, jumlah));
-            System.out.println("Dicatat: " + daftarMenu[index].nama + " x" + jumlah);
+            Menu menu = daftarMenu.get(index);
+            pesanan.add(new ItemPesanan(menu, jumlah));
+            System.out.println("Dicatat: " + menu.getNama() + " x" + jumlah);
         } while (pilihan != 0);
 
-        // ringkas isi stack jadi jumlah porsi per menu, untuk struk dan rekap
-        int[] porsi = new int[daftarMenu.length];
-        for (ItemPesanan item : pesanan) {
-            porsi[item.indexMenu] += item.porsi;
-        }
+        // ringkas daftar pesanan jadi jumlah porsi per menu, urut sesuai pesanan pertama
+        Map<Menu, Integer> porsi = new LinkedHashMap<>();
+        pesanan.forEach(item -> porsi.merge(item.getMenu(), item.getPorsi(), Integer::sum));
         return porsi;
     }
 
-    void batalkanTerakhir(Deque<ItemPesanan> pesanan) {
+    void batalkanPesanan(List<ItemPesanan> pesanan) {
         if (pesanan.isEmpty()) {
             System.out.println("Belum ada pesanan yang bisa dibatalkan.");
             return;
         }
-        ItemPesanan batal = pesanan.pop();
-        System.out.println("Dibatalkan: " + daftarMenu[batal.indexMenu].nama + " x" + batal.porsi);
+        System.out.println("Pesanan sejauh ini:");
+        for (int i = 0; i < pesanan.size(); i++) {
+            ItemPesanan item = pesanan.get(i);
+            System.out.println("  " + (i + 1) + ". " + item.getMenu().getNama() + " x" + item.getPorsi());
+        }
+        System.out.print("Batalkan nomor berapa? ");
+        int nomor = bacaAngka();
+        if (nomor < 1 || nomor > pesanan.size()) {
+            System.out.println("Pesanan nomor " + nomor + " tidak ada.");
+            return;
+        }
+        ItemPesanan batal = pesanan.remove(nomor - 1);   // sisa pesanan otomatis bergeser maju
+        System.out.println("Dibatalkan: " + batal.getMenu().getNama() + " x" + batal.getPorsi());
     }
 
     void terimaPembayaran(int total) {
@@ -168,53 +207,37 @@ class Kasir {
         cetakKembalian(uangPembeli - total);
     }
 
-    void catatKeRekap(int[] porsi, int total) {
+    void catatKeRekap(Map<Menu, Integer> porsi, int total) {
         omzet += total;
         jumlahPembeli++;
-        for (int i = 0; i < porsi.length; i++) {
-            porsiHarian[i] += porsi[i];
-        }
+        porsi.forEach((menu, jumlah) -> porsiHarian.merge(menu.getNama(), jumlah, Integer::sum));
     }
 
     // ---------- perhitungan ----------
 
-    int hitungSubtotal(int[] porsi) {
-        int subtotal = 0;
-        for (int i = 0; i < daftarMenu.length; i++) {
-            subtotal += daftarMenu[i].hitungHarga(porsi[i]);
-        }
-        return subtotal;
-    }
-
-    // tidak memakai field apa pun, jadi tetap static
-    static int hitungDiskon(int subtotal) {
-        if (subtotal >= 20000) {
-            return 2000;
-        }
-        if (subtotal >= 10000) {
-            return 1000;
-        }
-        return 0;
+    int hitungSubtotal(Map<Menu, Integer> porsi) {
+        return porsi.entrySet().stream()
+                .mapToInt(baris -> baris.getKey().hitungHarga(baris.getValue()))
+                .sum();
     }
 
     // ---------- tampilan ----------
 
     void tampilkanMenu() {
         System.out.println("Daftar menu:");
-        for (int i = 0; i < daftarMenu.length; i++) {
-            daftarMenu[i].tampilkan(i + 1);
+        for (int i = 0; i < daftarMenu.size(); i++) {
+            daftarMenu.get(i).tampilkan(i + 1);   // Menu dan MenuPaket menampilkan diri dengan caranya sendiri
         }
     }
 
-    void cetakStruk(String namaPembeli, int[] porsi, int subtotal, int diskon, int total) {
+    void cetakStruk(String namaPembeli, Map<Menu, Integer> porsi, int subtotal, int diskon, int total) {
         System.out.println();
         System.out.println("Pesanan atas nama " + namaPembeli);
-        for (int i = 0; i < daftarMenu.length; i++) {
-            if (porsi[i] > 0) {
-                Menu menu = daftarMenu[i];
-                int hargaBaris = menu.hitungHarga(porsi[i]);
-                System.out.println(String.format("%-14s%3s%11s", menu.nama, "x" + porsi[i], "Rp" + hargaBaris));
-            }
+        for (Map.Entry<Menu, Integer> baris : porsi.entrySet()) {
+            Menu menu = baris.getKey();
+            int jumlah = baris.getValue();
+            int hargaBaris = menu.hitungHarga(jumlah);
+            System.out.println(String.format("%-14s%3s%11s", menu.getNama(), "x" + jumlah, "Rp" + hargaBaris));
         }
         cetakGaris(28);
         cetakBaris("Subtotal", subtotal);
@@ -237,21 +260,34 @@ class Kasir {
         System.out.println();
         System.out.println("REKAP HARI INI");
         cetakGaris(28);
-        for (int i = 0; i < daftarMenu.length; i++) {
-            System.out.println(String.format("%-14s%14s", daftarMenu[i].nama, porsiHarian[i] + " porsi"));
-        }
+        porsiHarian.forEach((nama, porsi) ->
+                System.out.println(String.format("%-14s%14s", nama, porsi + " porsi")));
         cetakGaris(28);
+
+        int totalPorsi = porsiHarian.values().stream()
+                .mapToInt(Integer::intValue)
+                .sum();
+        System.out.println(String.format("%-14s%14s", "Total porsi", totalPorsi + " porsi"));
         System.out.println(String.format("%-14s%14s", "Pembeli", jumlahPembeli + " orang"));
         cetakBaris("Omzet", omzet);
 
-        int terlaris = 0;
-        for (int i = 1; i < porsiHarian.length; i++) {
-            if (porsiHarian[i] > porsiHarian[terlaris]) {
-                terlaris = i;
-            }
+        // tiga menu dengan porsi terbanyak, yang tidak laku tidak ikut
+        List<String> terlaris = porsiHarian.entrySet().stream()
+                .filter(baris -> baris.getValue() > 0)
+                .sorted((a, b) -> b.getValue() - a.getValue())
+                .limit(3)
+                .map(baris -> baris.getKey() + " (" + baris.getValue() + ")")
+                .toList();
+        if (!terlaris.isEmpty()) {
+            System.out.println("Terlaris: " + String.join(", ", terlaris));
         }
-        if (porsiHarian[terlaris] > 0) {
-            System.out.println("Menu terlaris: " + daftarMenu[terlaris].nama);
+
+        List<String> belumLaku = porsiHarian.entrySet().stream()
+                .filter(baris -> baris.getValue() == 0)
+                .map(Map.Entry::getKey)
+                .toList();
+        if (!belumLaku.isEmpty()) {
+            System.out.println("Belum laku: " + String.join(", ", belumLaku));
         }
     }
 
