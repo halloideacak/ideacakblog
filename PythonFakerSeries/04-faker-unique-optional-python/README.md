@@ -6,15 +6,15 @@ Data dummy dari Faker sering terlalu acak (ada email kembar), terlalu lengkap (t
 
 | File | Isi |
 |---|---|
-| `email_kembar.py` | Pembuka artikel: 1.000 pelanggan dummy gagal masuk ke tabel SQLite yang email-nya `UNIQUE` |
-| `hitung_kembar.py` | Menghitung nama depan dan email yang kembar |
-| `unik_manual.py` | Menjaga email tetap unik dengan `set` dan `while` |
-| `unik_faker.py` | `fake.unique`, `UniquenessException`, dan `fake.unique.clear()` |
-| `opsional.py` | `fake.optional` dengan `prob`, lalu disimpan ke CSV dan JSON |
-| `berbobot.py` | `random_element` dan `random_elements` dengan `OrderedDict` berbobot |
-| `multi_locale.py` | `Faker(["id_ID", "en_US"])` dan bobot per locale |
-| `pelanggan_dummy.py` | Versi gabungan: 1.000 pelanggan dummy yang lolos import ke SQLite dan disimpan ke `pelanggan.csv` |
-| `tantangan.py` | Jawaban tiga tantangan di akhir artikel: tanggal lahir opsional, kota berbobot, dan kode voucher unik |
+| `1_email_kembar.py` | Pembuka artikel: 1.000 pelanggan dummy gagal masuk ke tabel SQLite yang email-nya `UNIQUE` |
+| `2_hitung_kembar.py` | Menghitung nama depan dan email yang kembar |
+| `3_unik_manual.py` | Menjaga email tetap unik dengan `set` dan `while` |
+| `4_unik_faker.py` | `fake.unique`, `UniquenessException`, dan `fake.unique.clear()` |
+| `5_opsional.py` | `fake.optional` dengan `prob`, lalu disimpan ke CSV dan JSON |
+| `6_berbobot.py` | `random_element` dan `random_elements` dengan `OrderedDict` berbobot |
+| `7_multi_locale.py` | `Faker(["id_ID", "en_US"])` dan bobot per locale |
+| `8_pelanggan_dummy.py` | Versi gabungan: 1.000 pelanggan dummy yang lolos import ke SQLite dan disimpan ke `pelanggan.csv` |
+| `9_tantangan.py` | Jawaban tiga tantangan di akhir artikel: tanggal lahir opsional, kota berbobot, dan kode voucher unik |
 
 ## Kebutuhan
 
@@ -28,20 +28,20 @@ pip install -r requirements.txt
 ## Cara Menjalankan
 
 ```
-python email_kembar.py
-python pelanggan_dummy.py
+python 1_email_kembar.py
+python 8_pelanggan_dummy.py
 ```
 
 Semua skrip memakai `Faker.seed(2026)`, jadi hasilnya sama setiap kali dijalankan dengan versi Faker yang sama. Versi Faker yang berbeda bisa memberi hasil berbeda.
 
-## Output `email_kembar.py`
+## Output `1_email_kembar.py`
 
 ```
 Gagal di pelanggan ke-294: Puti Siska Manullang, M.Ak <qsaragih@hotmail.com>
 IntegrityError: UNIQUE constraint failed: pelanggan.email
 ```
 
-## Output `pelanggan_dummy.py`
+## Output `8_pelanggan_dummy.py`
 
 ```
 Tersimpan di SQLite: 1000 baris
