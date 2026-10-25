@@ -14,6 +14,8 @@ def faker_seed():
     return 2026
 
 
+# Tantangan 4: faker multi-locale menolak add_provider, jadi provider dipasang ke locale id_ID saja.
+# Untuk faker satu locale, faker["id_ID"] adalah object faker itu sendiri.
 @pytest.fixture(autouse=True)
 def tambah_provider(faker):
-    faker.add_provider(NikProvider)
+    faker["id_ID"].add_provider(NikProvider)

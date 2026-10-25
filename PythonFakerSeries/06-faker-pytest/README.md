@@ -13,10 +13,11 @@ Validasi form pendaftaran diuji dengan data dari fixture `faker`. Test dengan sa
 | `pytest.ini` | `pythonpath = .` supaya test di subfolder bisa mengimpor modul di folder ini |
 | `1_contoh_awal/test_coba.py` | Tanpa `conftest.py`: fixture `faker` memakai `en_US` dan seed 0 |
 | `2_tests/conftest.py` | `faker_session_locale` dan pendaftaran `NikProvider` |
-| `2_tests/test_1_data_tetap.py` | Satu data tetap, lolos |
-| `2_tests/test_2_pendaftaran_awal.py` | Data Faker ke validator awal, **sengaja gagal**, plus jebakan `parametrize` |
-| `2_tests/test_3_pendaftaran.py` | 200 pendaftar realistis ke validator perbaikan, semua lolos |
-| `3_tantangan/` | Jawaban tantangan, dengan `faker_seed` 2026 di `conftest.py`-nya |
+| `2_tests/test_1_asal_fixture.py` | Fixture `faker` sama dengan `Faker("id_ID")` yang di-seed 0, plus contoh `faker_seed` dan `faker_locale` |
+| `2_tests/test_2_data_tetap.py` | Satu data tetap, lolos |
+| `2_tests/test_3_pendaftaran_awal.py` | Data Faker ke validator awal, **sengaja gagal**, plus jebakan `parametrize` |
+| `2_tests/test_4_pendaftaran.py` | 200 pendaftar realistis ke validator perbaikan, semua lolos |
+| `3_tantangan/` | Jawaban empat tantangan, dengan `faker_seed` 2026 di `conftest.py`-nya. Tantangan 4 memakai `faker_locale` multi-locale, jadi `NikProvider` dipasang lewat `faker["id_ID"]` |
 
 Nama file test harus diawali `test_` supaya ditemukan pytest, jadi nomornya diletakkan setelah awalan itu.
 
@@ -35,13 +36,16 @@ Dari dalam folder ini:
 
 ```
 pytest 1_contoh_awal -s
-pytest 2_tests/test_3_pendaftaran.py -q -s
+pytest 2_tests/test_1_asal_fixture.py -q -s
+pytest 2_tests/test_4_pendaftaran.py -q -s
 pytest 3_tantangan -q -s
 ```
 
 `pytest 2_tests` akan menampilkan 1 test gagal (`test_pendaftar_faker_lolos`). Itu disengaja, sebagai bukti bug di `pendaftaran_awal.py`.
 
-## Output `pytest 2_tests/test_3_pendaftaran.py -q -s`
+Jalankan per folder, jangan `pytest` dari folder ini tanpa argumen. Object Faker milik sesi dibuat sekali oleh test pertama, dan `1_contoh_awal` (tanpa `conftest.py`) membuatnya dengan `en_US`. Akibatnya, `2_tests` dan `3_tantangan` ikut memakai `en_US`, dan test di sana gagal atau error.
+
+## Output `pytest 2_tests/test_4_pendaftaran.py -q -s`
 
 ```
 nama dengan gelar atau tanda baca: 845 dari 2.000, contoh: ['drg. Vanya Andriani, S.Gz', 'Tgk. Patricia Suartini', 'Belinda Sitompul, M.Kom.']

@@ -1,4 +1,6 @@
 # Jawaban tantangan artikel 6
+from collections import OrderedDict
+
 import pytest
 
 from data_uji import buat_pendaftar_realistis
@@ -26,3 +28,23 @@ def test_email_tanpa_at_ditolak(faker):
 # Tantangan 3: buktikan seed-nya 2026 (lihat conftest.py)
 def test_seed_2026(faker):
     print("\nseed 2026:", faker.name())
+
+
+# Tantangan 4: pendaftar WNA, fixture faker berisi tiga locale sekaligus
+@pytest.fixture
+def faker_locale():
+    return OrderedDict([("id_ID", 3), ("de_DE", 1), ("fr_FR", 1)])
+
+
+def test_nama_pendaftar_wna(faker, faker_locale):
+    print("\ncampuran:",[faker.name() for _ in range(5)])
+    ditolak = {}
+    for locale in faker.locales:
+        ditolak[locale] = []
+        for _ in range(500):
+            data = buat_pendaftar_realistis(faker["id_ID"])
+            data["nama"] = faker[locale].name()
+            if any(k.startswith("nama") for k in validasi_pendaftaran(data)):
+                ditolak[locale].append(data["nama"])
+        print(f"{locale}: {len(ditolak[locale])} dari 500 ditolak, contoh {ditolak[locale][:3]}")
+    assert ditolak["id_ID"] == []
