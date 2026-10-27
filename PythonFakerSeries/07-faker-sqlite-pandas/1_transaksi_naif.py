@@ -1,7 +1,8 @@
 # Cara naif: transaksi dengan waktu dan nominal yang acak merata
+import statistics
+from collections import Counter
 from datetime import datetime
 
-import pandas as pd
 from faker import Faker
 
 Faker.seed(2026)
@@ -14,7 +15,11 @@ transaksi = [
     }
     for _ in range(20000)
 ]
-df = pd.DataFrame(transaksi)
 
-print(df["waktu"].dt.hour.value_counts().sort_index().loc[[0, 3, 7, 12, 19, 23]])
-print(df["nominal"].describe().round(0))
+per_jam = Counter(t["waktu"].hour for t in transaksi)
+for jam in [0, 3, 7, 12, 19, 23]:
+    print(f"Jam {jam:2}: {per_jam[jam]} transaksi")
+
+daftar_nominal = [t["nominal"] for t in transaksi]
+print(f"Rata-rata nominal: Rp{statistics.mean(daftar_nominal):,.0f}".replace(",", "."))
+print(f"Median nominal   : Rp{statistics.median(daftar_nominal):,.0f}".replace(",", "."))

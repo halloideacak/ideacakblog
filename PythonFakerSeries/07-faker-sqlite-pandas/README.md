@@ -2,15 +2,15 @@
 
 Bagian dari **Library Faker Python Series** di [ideacak.com](https://www.ideacak.com/search/label/Faker%20Python).
 
-Transaksi dummy dengan sebaran merata membuat toko terlihat ramai jam 3 pagi. Artikel ini membuat 1.000 pelanggan dan 20.000 transaksi berelasi dengan jam ramai, nominal, dan pelanggan langganan yang berbobot, memasukkannya ke SQLite dengan `executemany`, lalu membuktikan polanya dengan pandas.
+Transaksi dummy dengan sebaran merata membuat toko terlihat ramai jam 3 pagi. Artikel ini menulis dulu profil bisnis sebuah toko kelontong (jam ramai dan sepi, rentang belanja, cara bayar, pelanggan langganan), menuangkannya sebagai bobot Faker untuk 1.000 pelanggan dan 20.000 transaksi berelasi, memasukkannya ke SQLite dengan `executemany`, lalu membandingkan hasilnya dengan profil memakai pandas.
 
 | File | Isi |
 |---|---|
 | `toko.py` | Skema tabel, bobot jam dan nominal, `buat_pelanggan()`, `buat_transaksi()`, dan `isi_database()` (diimpor oleh skrip lain) |
-| `1_transaksi_naif.py` | Cara naif: waktu dan nominal acak merata |
+| `1_transaksi_naif.py` | Cara naif: waktu dan nominal acak merata, dihitung dengan `Counter` dan `statistics` |
 | `2_insert_lambat_vs_cepat.py` | Commit per baris vs `executemany` dalam satu transaksi (butuh waktu sekitar satu menit) |
 | `3_isi_toko.py` | Membuat `toko.db` dan menguji foreign key |
-| `4_analisis_pandas.py` | Membaca `toko.db` dengan pandas: transaksi per jam, omzet per metode bayar, nominal, pelanggan teratas |
+| `4_analisis_pandas.py` | Hitungan per jam dengan SQL, lalu pandas membandingkan data dengan profil toko: periode jam, rentang nominal, metode bayar, dan porsi pelanggan langganan |
 | `5_tantangan.py` | Jawaban tiga tantangan di akhir artikel |
 
 `toko.db` tidak ikut di repo (`*.db` di-ignore). Jalankan `3_isi_toko.py` untuk membuatnya.
@@ -51,4 +51,16 @@ Pelanggan: 1000
 Transaksi: 20000
 [(1, 502, '2026-09-29 20:45:00', 120000, 'Tunai'), (2, 790, '2026-09-25 11:55:00', 139000, 'Tunai'), (3, 742, '2026-09-28 14:32:00', 7500, 'Tunai')]
 IntegrityError: FOREIGN KEY constraint failed
+```
+
+## Output `4_analisis_pandas.py` (potongan)
+
+```
+                    harapan %  hasil %
+Pagi 07-08               11.1     11.0
+Sepi 09-10                7.4      7.7
+Makan siang 11-13        28.4     28.5
+Sepi 14-16               12.3     12.3
+Pulang kerja 17-19       32.1     31.7
+Malam 20-21               8.6      8.8
 ```
